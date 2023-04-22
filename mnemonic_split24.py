@@ -72,7 +72,7 @@ def __mnemonic_split24(args=None):
 
         print(
             "\nGenerating two 12 words mnemonics for plausible deniability.\n"
-            "Please, take note of these mnemonics, together with the encryption algoritm, "
+            "Please, take note of these mnemonics, together with the encryption algorithm, "
             "in order to rebuild the original 24 words mnemonic:"
         )
 
