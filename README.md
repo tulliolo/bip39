@@ -3,6 +3,7 @@
 A collection of Bitcoin tools:
 
 - [Mnemonic FixSum](docs/MNEMONIC_FIXSUM.md)
+- [Mnemonic Transform](docs/MNEMONIC_TRANSFORM.md)
 - [Mnemonic Split24](docs/MNEMONIC_SPLIT24.md)
 - [Mnemonic Join24](docs/MNEMONIC_JOIN24.md)
 - [Mnemonic HideInPic](docs/MNEMONIC_HIDEINPIC.md)
