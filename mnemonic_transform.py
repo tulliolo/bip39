@@ -31,7 +31,8 @@ def __print_header():
         "************************\n"
         "** mnemonic_transform **\n"
         "************************\n"
-        "Turns a 12/15/18/24 words bip39 mnemonic into a new bip39 mnemonic of the same length, "
+        f"Turns a {'/'.join(str(num) for num in seed.WORD_COUNT_ALL)} words bip39 mnemonic "
+        "into a new bip39 mnemonic of the same length, "
         "useful for plausible deniability.\n"
         "Transformation is reversible running the same tool, with the same parameters.\n"
     )
@@ -43,7 +44,8 @@ def __mnemonic_transform(args=None):
 
     parser = argparse.ArgumentParser(
         formatter_class=argparse.RawTextHelpFormatter,
-        description="Splits a 24 words bip39 mnemonic into two 12 words bip39 mnemonics, "
+        description=f"Turns a {'/'.join(str(num) for num in seed.WORD_COUNT_ALL)} words bip39 mnemonic "
+                    "into a new bip39 mnemonic of the same length, "
                     "useful for plausible deniability.\n"
                     "Transformation is reversible running the same tool, with the same parameters."
     )
@@ -78,11 +80,14 @@ def __mnemonic_transform(args=None):
         wcount = int(options.generate)
 
         if wcount > 0:
+            entropy_size = [
+                seed.ENTROPY_SIZE_ALL[i] for i in range(len(seed.ENTROPY_SIZE_ALL)) if seed.WORD_COUNT_ALL[i] == wcount
+            ][0]
             original_seed = Seed.from_entropy(
-                Entropy.generate(int(options.generate) * seed.WORD_SIZE // 8 * 8)
+                Entropy.generate(entropy_size)
             )
             original_entropy = original_seed.entropy
-            print(f"generating a {options.generate} words mnemonic:\n{' '.join(original_seed.mnemonic)}")
+            print(f"generating a {wcount} words mnemonic:\n{' '.join(original_seed.mnemonic)}")
         else:
             print("insert a valid bip39 mnemonic:")
             original_mnemonic = input("mnemonic > ").strip().split()
