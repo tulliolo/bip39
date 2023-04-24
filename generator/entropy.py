@@ -25,13 +25,11 @@ SHA256_ROUNDS = 2048  # sha256 rounds (number)
 PASS_SIZE = 32  # bytes
 SALT_SIZE = 16  # bytes
 
-CSPRNG = secrets.SystemRandom()
-
 
 class Entropy:
     @classmethod
     def generate(cls, size) -> int:
-        return CSPRNG.getrandbits(size)
+        return secrets.SystemRandom().getrandbits(size)
 
 
 class BetterEntropy(Entropy):
@@ -39,7 +37,7 @@ class BetterEntropy(Entropy):
     def generate(cls, size=None) -> bytes:
         return hashlib.pbkdf2_hmac(
             'sha256',
-            CSPRNG.randbytes(PASS_SIZE),
-            CSPRNG.randbytes(SALT_SIZE),
+            secrets.SystemRandom().randbytes(PASS_SIZE),
+            secrets.SystemRandom().randbytes(SALT_SIZE),
             SHA256_ROUNDS
         )
