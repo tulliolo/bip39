@@ -11,10 +11,16 @@ description = "A bip39 implementation, with a collection of tools"
 license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.10"
-keywords = ["bip39", "entropy", "mnemonic", "seed"]
+keywords = [
+    "bitcoin", "bip39", "entropy", "mnemonic", "seed",
+    "cryptography", "steganography"
+]
 classifiers = [
-    "Development Status :: 0 - Alpha",
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
     "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
     "Operating System :: OS Independent",
 ]
 dynamic = ["dependencies", "version"]
@@ -28,7 +34,11 @@ dynamic = ["dependencies", "version"]
 bip39-cli = "tulliolo.bip39.cli.__main__:main"
 
 [tool.setuptools]
-packages = ["tulliolo.bip39", "tulliolo.bip39.cli", "tulliolo.bip39.utils"]
+packages = [
+    "tulliolo.bip39",
+    "tulliolo.bip39.cli",
+    "tulliolo.bip39.utils"
+]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
