@@ -1,2 +1,6 @@
-tests/output/*
+build
+dist
+tests/data/output
+*.egg-info
 **/__pycache__
+**/.pytest_cache

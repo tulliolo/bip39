@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tulliolo.bip39"
+authors = [
+    {name = "Tullio Loffredo (@tulliolo)", email = "tulliolo@yahoo.com"},
+]
+description = "A bip39 implementation, with a collection of tools"
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["bip39", "entropy", "mnemonic", "seed"]
+classifiers = [
+    "Development Status :: 0 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dynamic = ["dependencies", "version"]
+
+[project.urls]
+"Homepage" = "https://github.com/tulliolo/bip39"
+"Bug Tracker" = "https://github.com/tulliolo/bip39/issues"
+"Documentation" = "https://github.com/tulliolo/bip39/wiki"
+
+[project.scripts]
+bip39-cli = "tulliolo.bip39.cli.__main__:main"
+
+[tool.setuptools]
+packages = ["tulliolo.bip39"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {file = ["VERSION"]}

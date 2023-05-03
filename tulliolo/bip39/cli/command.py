@@ -17,27 +17,38 @@
 #   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 #   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-import hashlib
-import secrets
-
-SHA256_ROUNDS = 2048  # sha256 rounds (number)
-
-PASS_SIZE = 32  # bytes
-SALT_SIZE = 16  # bytes
+import sys
+from functools import wraps
 
 
-class Entropy:
-    @classmethod
-    def generate(cls, size) -> int:
-        return secrets.SystemRandom().getrandbits(size)
+def command(name):
+    """
+    A decorator wrapping commands in a try/except block with result codes.
+    :param name:
+    :return:
+    """
+    def decorate(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            code = 0
+            try:
 
+                func(*args, **kwargs)
 
-class BetterEntropy(Entropy):
-    @classmethod
-    def generate(cls, size=None) -> bytes:
-        return hashlib.pbkdf2_hmac(
-            'sha256',
-            secrets.SystemRandom().randbytes(PASS_SIZE),
-            secrets.SystemRandom().randbytes(SALT_SIZE),
-            SHA256_ROUNDS
-        )
+            except TypeError as e:
+                print(f"\n{name} failure!\n{str(e)}", file=sys.stderr)
+                code = -1
+            except ValueError as e:
+                print(f"\n{name} failure!\n{str(e)}", file=sys.stderr)
+                code = -2
+            except OSError as e:
+                print(f"\n{name} failure!\n{str(e)}", file=sys.stderr)
+                code = -3
+            except Exception as e:
+                print(f"\n{name} failure!\n{str(e)}", file=sys.stderr)
+                code = -4
+            finally:
+                return code
+
+        return wrapper
+    return decorate

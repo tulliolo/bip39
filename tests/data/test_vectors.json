@@ -152,7 +152,7 @@
         },
         {
             "entropy": "entropy",
-            "error": "invalid entropy value"
+            "error": "invalid entropy type"
         },
         {
             "entropy": "00",
@@ -168,7 +168,7 @@
         },
         {
             "mnemonic": "abandon abandon abandon abandon abandon pippo abandon abandon abandon abandon abandon about",
-            "error": "invalid mnemonic word"
+            "error": "invalid mnemonic"
         },
         {
             "mnemonic": "abandon",
@@ -180,7 +180,7 @@
         },
         {
             "mnemonic": "abandon abandon pippo abandon abandon abandon abandon abandon abandon abandon abandon about",
-            "error": "invalid mnemonic word"
+            "error": "invalid mnemonic"
         },
         {
             "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon",
