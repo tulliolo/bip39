@@ -28,7 +28,7 @@ dynamic = ["dependencies", "version"]
 bip39-cli = "tulliolo.bip39.cli.__main__:main"
 
 [tool.setuptools]
-packages = ["tulliolo.bip39"]
+packages = ["tulliolo.bip39", "tulliolo.bip39.cli", "tulliolo.bip39.utils"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
