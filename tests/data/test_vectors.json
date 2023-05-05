@@ -152,7 +152,7 @@
         },
         {
             "entropy": "entropy",
-            "error": "invalid entropy type"
+            "error": "invalid entropy value"
         },
         {
             "entropy": "00",

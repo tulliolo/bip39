@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-#   Copyright (C) 2022 Tullio Loffredo, @tulliolo
+#   Copyright (C) 2023 Tullio Loffredo, @tulliolo
 #
 #   It is subject to the license terms in the LICENSE file found in the top-level
 #   directory of this distribution.
@@ -13,7 +13,7 @@
 #
 #   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#   FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 #   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 #   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
@@ -27,6 +27,10 @@ import logging
 import math
 import secrets
 
+from typing import ByteString, TypeVar
+
+from tulliolo.bip39.utils.transformation import Transformation
+
 ENTROPY_SIZE_MIN = ENTROPY_SIZE_DEF = 128  # bits
 ENTROPY_SIZE_MAX = 256  # bits
 ENTROPY_SIZE_STEP = 32  # bits
@@ -36,27 +40,7 @@ ENTROPY_SIZE_RANGE = range(ENTROPY_SIZE_MIN, ENTROPY_SIZE_MAX + ENTROPY_SIZE_STE
 LOGGER = logging.getLogger(__name__)
 
 
-class TransformationAlgorithm(enum.Enum):
-    """
-    The supported entropy transformation algorithms:
-
-    - NEGATIVE (DEFAULT): inverts all bits, like in a negative;
-    - MIRROR: reads all bits from right to left, like in front of a mirror.
-    """
-    NEGATIVE = DEFAULT = "negative"
-    MIRROR = "mirror"
-
-    @property
-    def description(self) -> str:
-        """
-        A description of the current instance.
-        :return:
-        """
-        return (
-            "inverts all bits, like in a negative"
-            if self == TransformationAlgorithm.NEGATIVE else
-            "reads all bits from right to left, like in front of a mirror"
-        )
+HexString = TypeVar("HexString", bound=str)
 
 
 class Entropy:
@@ -65,67 +49,34 @@ class Entropy:
 
     https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
     """
-
-    _create_key = object()
-
-    def __init__(self, create_key, value: bytes):
+    def __init__(self, value: ByteString | HexString | int):
         """
-        Builds a new entropy instance. It cannot be directly invoked (see from_value and generate methods).
-        :param create_key: a key for this class, locking the direct invocation of the constructor
-        :param value: an entropy value in bytes
+        Builds a new Entropy instance.
+        :param value: an entropy value
         """
-        assert create_key == self._create_key, \
-            "entropy must be created by from_value or generate"
-
-        self._value = value
-
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Entropy):
-            try:
-                other = Entropy.from_value(other)
-            except Exception as e:
-                LOGGER.warning(
-                    f"cannot convert '{other}' into {Entropy} | "
-                    f"{' | '.join(e.args)}"
-                )
-                return False
-
-        return self._value == other._value
-
-    def __len__(self) -> int:
-        """
-        Returns the entropy size in bits
-        :return:
-        """
-        return len(self._value) * 8  # bits
-
-    @classmethod
-    def from_value(cls, value: bytearray | bytes | int | str) -> "Entropy":
-        """
-        Imports an entropy value generated from another source.
-        :param value: the entropy value
-        :return:
-        """
-        if isinstance(value, (bytes, bytearray)):
-            value = bytes(value)
-        elif isinstance(value, int):
-            size = math.ceil(value.bit_length() / ENTROPY_SIZE_STEP) * ENTROPY_SIZE_STEP // 8  # bytes
-            value = value.to_bytes(size, byteorder="big")
-        elif isinstance(value, str):
-            try:
+        try:
+            if isinstance(value, ByteString):
+                value = bytes(value)
+            elif isinstance(value, int):
+                value = int(value)
+                size = math.ceil(value.bit_length() / ENTROPY_SIZE_STEP) * ENTROPY_SIZE_STEP // 8  # bytes
+                value = value.to_bytes(size, byteorder="big")
+            else:
                 value = bytes.fromhex(value)
-            except ValueError as e:
-                LOGGER.error(f"invalid entropy type | {str(e)}")
-                raise TypeError(
-                    "invalid entropy type",
-                    f"'{value}' is not a hex string"
-                ) from None
-        else:
-            LOGGER.error("invalid entropy type")
-            raise TypeError(
+        except TypeError as e:
+            e.args = (
                 "invalid entropy type",
-                f"type {type(value)} cannot be converted to entropy bytes"
+                *e.args
             )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
+        except Exception as e:
+            e.args = (
+                "invalid entropy value",
+                *e.args
+            )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
 
         size = len(value) * 8  # bits
         if size not in ENTROPY_SIZE_RANGE:
@@ -136,51 +87,62 @@ class Entropy:
                 f"obtained: {size} bits"
             )
 
-        return cls(cls._create_key, value)
+        self._value = value
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, type(self)):
+            LOGGER.warning(f"invalid entropy type | cannot compare {self} with {type(other)}")
+            return False
+
+        return self._value == other._value
+
+    def __len__(self) -> int:
+        """
+        Returns the entropy size in bits.
+        :return:
+        """
+        return len(self._value) * 8  # bits
 
     @classmethod
-    def generate(cls, size: int = ENTROPY_SIZE_DEF) -> "Entropy":
+    def generate(cls, size: int) -> "Entropy":
         """
         Generates an entropy using a cryptographically secure generator.
         :param size: the size in bits
         :return:
         """
-        size = int(size)
+        try:
+            if size not in ENTROPY_SIZE_RANGE:
+                raise ValueError(
+                    f"expected: {'/'.join(str(v) for v in ENTROPY_SIZE_RANGE)} bits",
+                    f"obtained: {size} bits"
+                )
 
-        if size not in ENTROPY_SIZE_RANGE:
-            LOGGER.error("invalid entropy size")
-            raise ValueError(
-                "invalid entropy size",
-                f"expected: {'/'.join([str(v) for v in ENTROPY_SIZE_RANGE])} bits",
-                f"obtained: {size} bits"
+            token = secrets.token_bytes(size // 8)
+        except TypeError as e:
+            e.args = (
+                "invalid size type",
+                *e.args
             )
-
-        value = secrets.SystemRandom().randbytes(size // 8)
-        return cls(cls._create_key, value)
-
-    def transform(self, algorithm: TransformationAlgorithm = TransformationAlgorithm.DEFAULT) -> "Entropy":
-        """
-        Applies a transformation on the current entropy.
-        :param algorithm: the algorithm to apply
-        :return:
-        """
-        size = len(self)
-        value = int.from_bytes(self._value, byteorder="big")
-
-        return (
-            Entropy.from_value((2**size - value - 1).to_bytes(size // 8, byteorder='big'))
-            if algorithm == TransformationAlgorithm.NEGATIVE else
-            Entropy.from_value(
-                int(
-                    bin(value)[2:].zfill(size)[::-1], 2
-                ).to_bytes(size // 8, byteorder='big')
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
+        except Exception as e:
+            e.args = (
+                "invalid size value",
+                *e.args
             )
-        )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
+
+        return cls(token)
 
     @property
     def value(self) -> bytes:
+        return self._value
+
+    def transform(self, transformation: Transformation) -> "Entropy":
         """
-        The entropy value in bytes
+        Applies a transformation on entropy
+        :param transformation:
         :return:
         """
-        return self._value
+        return Entropy(transformation(self._value))

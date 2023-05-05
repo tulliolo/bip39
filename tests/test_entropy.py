@@ -21,7 +21,7 @@ import json
 import logging
 import pytest
 
-from tulliolo.bip39.entropy import Entropy, ENTROPY_SIZE_RANGE, TransformationAlgorithm
+from tulliolo.bip39.entropy import Entropy, ENTROPY_SIZE_RANGE, Transformation
 from common import get_vector_data, get_error_data
 
 LOGGER = logging.getLogger(__name__)
@@ -38,10 +38,9 @@ class TestStatic:
         count += 1
         LOGGER.info(f"START test static {count}:\n{json.dumps(vector, indent=2)}")
 
-        entropy = Entropy.from_value(vector["entropy"])
+        entropy = Entropy(vector["entropy"])
         LOGGER.info(f"generated entropy: {entropy.value.hex()}")
 
-        assert entropy == vector["entropy"]
         hex_value = format_value(vector["entropy"])
         assert entropy.value.hex() == hex_value
 
@@ -69,7 +68,7 @@ class TestError:
         LOGGER.info(f"START test error {count}:\n{json.dumps(vector, indent=2)}")
 
         try:
-            Entropy.from_value(vector["entropy"])
+            Entropy(vector["entropy"])
             raise ValueError("the test was successful...")
         except Exception as e:
             LOGGER.error(" | ".join(e.args))
@@ -83,40 +82,26 @@ class TestError:
 
 
 class TestTransformation:
-    @pytest.mark.parametrize(
-        "iter_data", enumerate([
-            (vector, algorithm) for vector in get_vector_data() for algorithm in TransformationAlgorithm
-        ])
-    )
-    def test_transformation(self, iter_data):
-        num, (vector, algorithm) = iter_data
-        vector["algorithm"] = algorithm.value
+    @pytest.mark.parametrize("iter_transformation", enumerate((
+            transformation for transformation in Transformation
+    )))
+    @pytest.mark.parametrize("iter_data", enumerate(get_vector_data()))
+    def test_transformation(self, iter_transformation, iter_data):
+        vcount, vector = iter_data
+        tcount, transformation = iter_transformation
+        vcount += 1
 
-        group = num // len(TransformationAlgorithm) + 1
-        count = num % len(TransformationAlgorithm)
+        vector["transformation"] = transformation.value
 
-        LOGGER.info(f"START test transformation {group}.{count}:\n{json.dumps(vector, indent=2)}")
+        LOGGER.info(f"START test transformation {vcount}.{tcount}:\n{json.dumps(vector, indent=2)}")
 
-        entropy = Entropy.from_value(vector["entropy"])
-        LOGGER.info(f"generated entropy: {entropy.value.hex()}")
+        entropy_o = Entropy(vector["entropy"])
+        LOGGER.info(f"generated entropy: {entropy_o.value.hex()}")
 
-        entropy_t = entropy.transform(algorithm)
-        LOGGER.info(f"applied {algorithm.value} transformation to entropy: {entropy_t.value.hex()}")
+        entropy_t = entropy_o.transform(transformation)
+        LOGGER.info(f"applied {transformation.value} transformation to entropy: {entropy_t.value.hex()}")
 
-        bin_value = bin(int(entropy.value.hex(), 16))[2:].zfill(len(entropy))
-        bin_value_t = bin(int(entropy_t.value.hex(), 16))[2:].zfill(len(entropy_t))
+        entropy_t = entropy_t.transform(transformation)
+        LOGGER.info(f"applied {transformation.value} transformation to entropy: {entropy_t.value.hex()}")
 
-        LOGGER.info(
-            "bit representations:\n\t"
-            f"{bin_value}\n\t"
-            f"{bin_value_t}"
-        )
-
-        if algorithm == TransformationAlgorithm.NEGATIVE:
-            assert all([
-                b != b_t for b, b_t in zip(bin_value, bin_value_t)
-            ]), "invalid negative transformation: bits are not inverted"
-        elif algorithm == TransformationAlgorithm.MIRROR:
-            assert bin_value == bin_value_t[::-1], "invalid reversal transformation: bits are not swapped"
-
-        LOGGER.info(f"STOP  test transformation {group}.{count}")
+        assert entropy_o == entropy_t
