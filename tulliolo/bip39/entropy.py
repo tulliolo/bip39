@@ -57,12 +57,14 @@ class Entropy:
         try:
             if isinstance(value, ByteString):
                 value = bytes(value)
+            elif isinstance(value, str):
+                value = bytes.fromhex(value)
             elif isinstance(value, int):
                 value = int(value)
                 size = math.ceil(value.bit_length() / ENTROPY_SIZE_STEP) * ENTROPY_SIZE_STEP // 8  # bytes
                 value = value.to_bytes(size, byteorder="big")
             else:
-                value = bytes.fromhex(value)
+                raise TypeError(f"cannot convert {type(value)} to entropy")
         except TypeError as e:
             e.args = (
                 "invalid entropy type",
