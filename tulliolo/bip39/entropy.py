@@ -22,12 +22,11 @@ A module implementing the entropy (ENT) as defined in bip39 specs:
 
 https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 """
-import enum
 import logging
 import math
 import secrets
 
-from typing import ByteString, TypeVar
+from typing import ByteString, Type, TypeVar
 
 from tulliolo.bip39.utils.transformation import Transformation
 
@@ -41,6 +40,7 @@ LOGGER = logging.getLogger(__name__)
 
 
 HexString = TypeVar("HexString", bound=str)
+T = TypeVar("T", bound="Entropy")
 
 
 class Entropy:
@@ -49,7 +49,7 @@ class Entropy:
 
     https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
     """
-    def __init__(self, value: ByteString | HexString | int):
+    def __init__(self: T, value: ByteString | HexString | int) -> None:
         """
         Builds a new Entropy instance.
         :param value: an entropy value
@@ -91,14 +91,14 @@ class Entropy:
 
         self._value = value
 
-    def __eq__(self, other) -> bool:
+    def __eq__(self: T, other: T) -> bool:
         if not isinstance(other, type(self)):
             LOGGER.warning(f"invalid entropy type | cannot compare {self} with {type(other)}")
             return False
 
         return self._value == other._value
 
-    def __len__(self) -> int:
+    def __len__(self: T) -> int:
         """
         Returns the entropy size in bits.
         :return:
@@ -106,7 +106,7 @@ class Entropy:
         return len(self._value) * 8  # bits
 
     @classmethod
-    def generate(cls, size: int) -> "Entropy":
+    def generate(cls: Type[T], size: int) -> T:
         """
         Generates an entropy using a cryptographically secure generator.
         :param size: the size in bits
@@ -138,13 +138,13 @@ class Entropy:
         return cls(token)
 
     @property
-    def value(self) -> bytes:
+    def value(self: T) -> bytes:
         return self._value
 
-    def transform(self, transformation: Transformation) -> "Entropy":
+    def transform(self: T, transformation: Transformation) -> T:
         """
         Applies a transformation on entropy
         :param transformation:
         :return:
         """
-        return Entropy(transformation(self._value))
+        return self.__class__(transformation(self._value))
