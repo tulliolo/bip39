@@ -43,6 +43,11 @@ class Transformation(Enum):
         )
 
     def __call__(self, value: bytes) -> bytes:
+        """
+        Applies the current transformation
+        :param value:
+        :return:
+        """
         size = len(value) * 8  # bits
         value = int.from_bytes(value, byteorder="big")
 
