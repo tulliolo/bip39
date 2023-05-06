@@ -120,16 +120,9 @@ class Entropy:
                 )
 
             token = secrets.token_bytes(size // 8)
-        except TypeError as e:
-            e.args = (
-                "invalid size type",
-                *e.args
-            )
-            LOGGER.error(" | ".join(e.args))
-            raise e.with_traceback(e.__traceback__)
         except Exception as e:
             e.args = (
-                "invalid size value",
+                "invalid entropy size",
                 *e.args
             )
             LOGGER.error(" | ".join(e.args))
