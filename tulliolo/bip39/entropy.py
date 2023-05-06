@@ -90,6 +90,8 @@ class Entropy:
             )
 
         self._entropy_value = value
+        self._size = size
+
 
     def __eq__(self: T, other: T) -> bool:
         if not isinstance(other, type(self)):
@@ -97,13 +99,6 @@ class Entropy:
             return False
 
         return self._entropy_value == other._entropy_value
-
-    def __len__(self: T) -> int:
-        """
-        Returns the entropy size in bits.
-        :return:
-        """
-        return len(self._entropy_value) * 8  # bits
 
     @classmethod
     def generate(cls: Type[T], size: int) -> T:
@@ -137,7 +132,7 @@ class Entropy:
         :return:
         """
         return {
-            "size": self.__len__(),
+            "size": self._size,  # bits
             "value": self._entropy_value.hex()
         }
 
