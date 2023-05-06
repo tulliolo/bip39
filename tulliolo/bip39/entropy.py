@@ -137,7 +137,7 @@ class Entropy:
         :return:
         """
         return {
-            "size": len(self._entropy_value) * 8,  # bits
+            "size": len(self),  # bits
             "value": self._entropy_value.hex()
         }
 
