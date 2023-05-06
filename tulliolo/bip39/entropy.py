@@ -89,21 +89,21 @@ class Entropy:
                 f"obtained: {size} bits"
             )
 
-        self._entropy_value = value
+        self._value = value
 
     def __eq__(self: T, other: T) -> bool:
         if not isinstance(other, type(self)):
             LOGGER.warning(f"invalid type | cannot compare {type(self)} with {type(other)}")
             return False
 
-        return self._entropy_value == other._entropy_value
+        return self._value == other._value
 
     def __len__(self: T) -> int:
         """
         Returns the entropy size in bits.
         :return:
         """
-        return len(self._entropy_value) * 8  # bits
+        return len(self._value) * 8  # bits
 
     @classmethod
     def generate(cls: Type[T], size: int) -> T:
@@ -138,12 +138,12 @@ class Entropy:
         """
         return {
             "size": len(self),  # bits
-            "value": self._entropy_value.hex()
+            "value": self._value.hex()
         }
 
     @property
     def value(self: T) -> bytes:
-        return self._entropy_value
+        return self._value
 
     def transform(self: T, transformation: Transformation) -> T:
         """
@@ -151,4 +151,4 @@ class Entropy:
         :param transformation:
         :return:
         """
-        return self.__class__(transformation(self._entropy_value))
+        return self.__class__(transformation(self._value))
