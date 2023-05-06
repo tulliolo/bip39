@@ -93,7 +93,7 @@ class Entropy:
 
     def __eq__(self: T, other: T) -> bool:
         if not isinstance(other, type(self)):
-            LOGGER.warning(f"invalid entropy type | cannot compare {type(self)} with {type(other)}")
+            LOGGER.warning(f"invalid type | cannot compare {type(self)} with {type(other)}")
             return False
 
         return self._entropy_value == other._entropy_value
