@@ -39,7 +39,7 @@ class TestStatic:
         LOGGER.info(f"START test static {count}:\n{json.dumps(vector, indent=2)}")
 
         entropy = Entropy(vector["entropy"])
-        LOGGER.info(f"generated entropy: {entropy.value.hex()}")
+        LOGGER.info(f"generated entropy:\n{json.dumps(entropy.info, indent=2)}")
 
         hex_value = format_value(vector["entropy"])
         assert entropy.value.hex() == hex_value
@@ -55,7 +55,7 @@ class TestDynamic:
         LOGGER.info(f"START test dynamic {count}: {size}")
 
         entropy = Entropy.generate(size)
-        LOGGER.info(f"generated entropy: {entropy.value.hex()}")
+        LOGGER.info(f"generated entropy:\n{json.dumps(entropy.info, indent=2)}")
 
         LOGGER.info(f"STOP  test dynamic {count}")
 
@@ -96,12 +96,18 @@ class TestTransformation:
         LOGGER.info(f"START test transformation {vcount}.{tcount}:\n{json.dumps(vector, indent=2)}")
 
         entropy_o = Entropy(vector["entropy"])
-        LOGGER.info(f"generated entropy: {entropy_o.value.hex()}")
+        LOGGER.info(f"generated entropy:\n{json.dumps(entropy_o.info, indent=2)}")
 
         entropy_t = entropy_o.transform(transformation)
-        LOGGER.info(f"applied {transformation.value} transformation to entropy: {entropy_t.value.hex()}")
+        LOGGER.info(
+            f"applied {transformation.value} transformation to entropy:\n"
+            f"{json.dumps(entropy_t.info, indent=2)}"
+        )
 
         entropy_t = entropy_t.transform(transformation)
-        LOGGER.info(f"applied {transformation.value} transformation to entropy: {entropy_t.value.hex()}")
+        LOGGER.info(
+            f"applied {transformation.value} transformation to entropy:\n"
+            f"{json.dumps(entropy_t.info, indent=2)}"
+        )
 
         assert entropy_o == entropy_t
