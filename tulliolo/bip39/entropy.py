@@ -131,7 +131,7 @@ class Entropy:
         return cls(token)
 
     @property
-    def info(self) -> dict:
+    def info(self: T) -> dict:
         """
         Returns a dict representation of this instance.
         :return:
