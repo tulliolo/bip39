@@ -20,6 +20,7 @@
 """
 A collection of common utils.
 """
+import unicodedata
 
 
 def normalize_string(value: str) -> str:
@@ -28,4 +29,5 @@ def normalize_string(value: str) -> str:
     :param value: the string to normalize
     :return:
     """
-    return " ".join(str(value).split())
+    value = " ".join(str(value).split())
+    return unicodedata.normalize("NFKD", value)
