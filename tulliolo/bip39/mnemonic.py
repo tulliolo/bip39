@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-#   Copyright (C) 2022 Tullio Loffredo, @tulliolo
+#   Copyright (C) 2023 Tullio Loffredo, @tulliolo
 #
 #   It is subject to the license terms in the LICENSE file found in the top-level
 #   directory of this distribution.
@@ -13,161 +13,149 @@
 #
 #   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 #   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-#   FITNESS FOR A PARTICULAR PURPOSE AND NON INFRINGEMENT. IN NO EVENT SHALL THE
+#   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 #   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 #   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 """
-A module implementing the mnemonic as defined in bip39 specs:
-
+A module implementing the bip39 specs:
 https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 """
 import hashlib
 import logging
 import math
-from typing import Iterable
+import secrets
+from typing import Iterable, TypeVar, Tuple, ByteString
 
-from tulliolo.bip39.entropy import Entropy, ENTROPY_SIZE_RANGE, ENTROPY_SIZE_STEP
+from tulliolo.bip39.utils.common import normalize_string
+from tulliolo.bip39.utils.transformation import Transformation
 from tulliolo.bip39.wordlist import wordlist
+
+ENTROPY_SIZE_MIN = ENTROPY_SIZE_DEF = 128  # bits
+ENTROPY_SIZE_MAX = 256  # bits
+ENTROPY_SIZE_STEP = 32  # bits
+
+ENTROPY_SIZE_RANGE = range(ENTROPY_SIZE_MIN, ENTROPY_SIZE_MAX + ENTROPY_SIZE_STEP, ENTROPY_SIZE_STEP)
 
 WORD_SIZE = 11  # bits
 
 WORD_COUNT_ALL = tuple(
     math.ceil(entropy_size / WORD_SIZE) for entropy_size in ENTROPY_SIZE_RANGE
 )
+WORD_COUNT_DEF = WORD_COUNT_ALL[ENTROPY_SIZE_RANGE.index(ENTROPY_SIZE_DEF)]
 
 CHECKSUM_SIZE_ALL = tuple(
-    word_count*WORD_SIZE - entropy_size
+    word_count * WORD_SIZE - entropy_size
     for word_count, entropy_size in zip(WORD_COUNT_ALL, ENTROPY_SIZE_RANGE)
 )
 
 LOGGER = logging.getLogger(__name__)
 
-
-class Checksum:
-    """
-    The checksum, as defined in bip39 specs:
-
-    https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
-    """
-    def __init__(self, entropy: Entropy):
-        """
-        Builds a new checksum instance.
-        :param entropy: the entropy
-        """
-        if not isinstance(entropy, Entropy):
-            LOGGER.error("invalid entropy type")
-            raise TypeError(
-                "invalid entropy type",
-                f"expected: {Entropy}",
-                f"obtained: {type(entropy)}"
-            )
-
-        self.__size = CHECKSUM_SIZE_ALL[
-            ENTROPY_SIZE_RANGE.index(len(entropy))
-        ]
-
-        entropy_hash = hashlib.sha256(entropy.value).digest()
-        self.__value = entropy_hash[0] >> (8 - self.__size)
-
-    def __eq__(self, other):
-        if not isinstance(other, Checksum):
-            LOGGER.warning(
-                "cannot compare objects of different types"
-            )
-            return False
-
-        return (
-            self.__value == other.__value and
-            len(self) == len(other)
-        )
-
-    def __len__(self) -> int:
-        """
-        Returns the checksum size in bits.
-        :return:
-        """
-        return self.__size
-
-    @property
-    def value(self) -> int:
-        """
-        The checksum value.
-        :return:
-        """
-        return self.__value
+HexString = TypeVar("HexString", bound=str)
+T = TypeVar("T", bound="Entropy")
 
 
 class Mnemonic:
     """
-    The mnemonic, as defined in bip39 specs:
+    A class implementing the bip39 specs:
+    https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-    https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki#generating-the-mnemonic
+    The class also provides a function to transform the entropy that can be used to create some side-mnemonics for
+    plausible deniability.
     """
-    _create_key = object()
+    def __init__(self, entropy: ByteString | HexString | int):
+        """
+        Creates a new mnemonic instance from entropy.
+        :param entropy:
+        """
+        try:
+            if isinstance(entropy, ByteString):
+                entropy = bytes(entropy)
+            elif isinstance(entropy, str):
+                entropy = bytes.fromhex(entropy)
+            elif isinstance(entropy, int):
+                entropy = int(entropy)
+                entropy_size = math.ceil(entropy.bit_length() / ENTROPY_SIZE_STEP) * ENTROPY_SIZE_STEP // 8  # bytes
+                entropy = entropy.to_bytes(entropy_size, byteorder="big")
+            else:
+                raise TypeError(f"cannot convert {type(entropy)} to entropy")
+        except TypeError as e:
+            e.args = (
+                "invalid entropy type",
+                *e.args
+            )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
+        except Exception as e:
+            e.args = (
+                "invalid entropy value",
+                *e.args
+            )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
 
-    def __init__(self, create_key, entropy: Entropy):
-        """
-        Builds a new mnemonic instance. It cannot be directly invoked (see from_value and from_entropy methods).
-        :param create_key: a key for this class, locking the direct invocation of the constructor
-        :param entropy: the entropy
-        """
-        assert create_key == self._create_key, \
-            "mnemonic must be created by import_value or from_entropy"
+        entropy_size = len(entropy) * 8  # bits
+        if entropy_size not in ENTROPY_SIZE_RANGE:
+            args = (
+                "invalid entropy size",
+                f"expected: {', '.join(str(v) for v in ENTROPY_SIZE_RANGE)} bits",
+                f"obtained: {entropy_size} bits"
+            )
+            LOGGER.error(" | ".join(args))
+            raise ValueError(args)
 
         self._entropy = entropy
-        self._checksum = Checksum(entropy)
 
     def __eq__(self, other) -> bool:
-        if not isinstance(other, Mnemonic):
-            try:
-                other = Mnemonic.from_value(other)
-            except Exception as e:
-                LOGGER.warning(
-                    f"cannot convert '{other}' into {Mnemonic} | "
-                    f"{' | '.join(e.args)}"
-                )
-                return False
+        if not isinstance(other, type(self)):
+            LOGGER.warning(f"invalid type | cannot compare {type(self)} with {type(other)}")
+            return False
 
-        return self._entropy == other._entropy and self._checksum == other._checksum
+        return self._entropy == other._entropy
 
     def __len__(self) -> int:
         """
-        Returns the number of words.
+        Returns the mnemonic length in words.
         :return:
         """
-        return WORD_COUNT_ALL[
-            ENTROPY_SIZE_RANGE.index(len(self._entropy))
-        ]
+        entropy_size = len(self._entropy) * 8  # bits
+        return WORD_COUNT_ALL[ENTROPY_SIZE_RANGE.index(entropy_size)]
 
     @classmethod
-    def from_value(cls, value: str | bytes | bytearray | Iterable[str], fix_checksum: bool = False) -> "Mnemonic":
+    def from_words(cls, value: str | Iterable[str], fix_checksum: bool = False) -> "Mnemonic":
         """
-        Imports a mnemonic value.
-        :param fix_checksum: if set, corrects the checksum (and the last word);
-        useful e.g. when the mnemonic is generated by rolling dices.
-        :param value: a string or bytes or iterable of strings representing the mnemonic value
+        Creates a new mnemonic instance from a list of words.
+        :param value: the list of words
+        :param fix_checksum: if set, corrects the checksum; it can be useful when the words are 'manually' generated
+        (e.g. by rolling dices)
         :return:
         """
         if isinstance(value, str):
-            value = value.split()
-        elif isinstance(value, bytes | bytearray):
-            value = value.decode("utf-8").split()
-        elif not isinstance(value, Iterable):
-            LOGGER.error("invalid mnemonic type")
-            raise TypeError(
+            value = normalize_string(value).split()
+        elif isinstance(value, Iterable):
+            value = [normalize_string(v) for v in value]
+        else:
+            args = (
                 "invalid mnemonic type",
-                "mnemonic must be of type string or iterable of strings"
+                f"cannot convert {type(value)} to mnemonic"
             )
+            LOGGER.error(" | ".join(args))
+            raise TypeError(args)
 
-        value = tuple([str(v) for v in value])
-        if len(value) not in WORD_COUNT_ALL:
-            LOGGER.error("invalid mnemonic size")
-            raise ValueError(
+        word_count = len(value)
+        if word_count not in WORD_COUNT_ALL:
+            args = (
                 "invalid mnemonic size",
-                f"expected: {'/'.join([str(num) for num in WORD_COUNT_ALL])}",
-                f"obtained: {len(value)}"
+                f"expected: {', '.join(str(v) for v in WORD_COUNT_ALL)} words",
+                f"obtained: {word_count} words"
             )
+            LOGGER.error(" | ".join(args))
+            raise ValueError(args)
+
+        entropy_size, checksum_size = [
+            (e, c) for w, e, c in zip(WORD_COUNT_ALL, ENTROPY_SIZE_RANGE, CHECKSUM_SIZE_ALL)
+            if w == word_count
+        ][0]
 
         LOGGER.debug("index -> word")
         sequence = 0
@@ -176,82 +164,107 @@ class Mnemonic:
                 wid = wordlist.index(word)
                 LOGGER.debug(f"{wid:4}  -> {word}")
             except ValueError as e:
-                LOGGER.error(f"invalid mnemonic | {str(e)}")
-                raise ValueError(
-                    "invalid mnemonic",
-                    f"word '{word}' is not in dictionary"
-                ) from None
-
+                e.args = (
+                    "invalid mnemonic value",
+                    *e.args
+                )
+                LOGGER.error(" | ".join(e.args))
+                raise e.with_traceback(e.__traceback__)
             sequence = (sequence << WORD_SIZE) | wid
-
-        sequence_size = len(value) * WORD_SIZE  # bits
-        checksum_size = sequence_size // ENTROPY_SIZE_STEP  # bits
-        entropy_size = sequence_size - checksum_size  # bits
-        LOGGER.debug(f"checksum size = {checksum_size} | entropy size = {entropy_size}")
 
         entropy = (sequence >> checksum_size).to_bytes(entropy_size // 8, byteorder="big")
         checksum = sequence & (2 ** checksum_size - 1)
 
-        mnemonic = cls(cls._create_key, Entropy.from_value(entropy))
-        if not fix_checksum and mnemonic._checksum.value != checksum:
-            LOGGER.error("invalid checksum")
-            raise ValueError(
+        result = Mnemonic(entropy)
+        if checksum != result.checksum:
+            args = (
                 "invalid checksum",
-                f"expected: {mnemonic._checksum.value}",
-                f"obtained: {checksum}"
+                f"expected: {hex(result.checksum)[2:]}",
+                f"obtained: {hex(checksum)[2:]}"
             )
+            if fix_checksum:
+                LOGGER.warning(" | ".join(args))
+            else:
+                LOGGER.error(" | ".join(args))
+                raise ValueError(args)
 
-        return mnemonic
+        return result
 
     @classmethod
-    def from_entropy(cls, entropy: Entropy) -> "Mnemonic":
+    def generate(cls, size: int) -> "Mnemonic":
         """
-        Generates a new mnemonic object from the specified entropy.
-        :param entropy: the entropy used to generate the mnemonic
-        :return: a new mnemonic object
+        Generates a new mnemonic instance using a cryptographically secure generator.
+        :param size: the mnemonic length in words
+        :return:
         """
-        if not isinstance(entropy, Entropy):
-            LOGGER.error("invalid entropy type")
-            raise TypeError(
-                "invalid entropy type",
-                "entropy must be of type Entropy"
-            )
+        try:
+            size = int(size)
+            if size not in WORD_COUNT_ALL:
+                args = (
+                    f"expected: {', '.join(str(v) for v in WORD_COUNT_ALL)} words",
+                    f"obtained: {size} words"
+                )
+                LOGGER.error(" | ".join(args))
+                raise ValueError(args)
 
-        return cls(cls._create_key, entropy)
+            entropy_size = ENTROPY_SIZE_RANGE[WORD_COUNT_ALL.index(size)] // 8  # bytes
+            token = secrets.token_bytes(entropy_size)
+        except Exception as e:
+            e.args = (
+                "invalid mnemonic size",
+                *e.args
+            )
+            LOGGER.error(" | ".join(e.args))
+            raise e.with_traceback(e.__traceback__)
+
+        return Mnemonic(token)
 
     @property
-    def entropy(self) -> Entropy:
+    def checksum(self) -> int:
         """
-        The entropy.
+        Calculates the checksum.
+        :return:
+        """
+        entropy_size = len(self._entropy) * 8  # bits
+        checksum_size = CHECKSUM_SIZE_ALL[ENTROPY_SIZE_RANGE.index(entropy_size)]
+
+        entropy_hash = hashlib.sha256(self._entropy).digest()
+        return entropy_hash[0] >> (8 - checksum_size)
+
+    @property
+    def entropy(self) -> bytes:
+        """
+        Returns the entropy.
         :return:
         """
         return self._entropy
 
     @property
-    def checksum(self) -> Checksum:
+    def info(self) -> dict:
         """
-        The checksum.
+        Provides a dict representation of this instance.
         :return:
         """
-        return self._checksum
+        return {
+            "entropy": self._entropy.hex(),
+            "checksum": hex(self.checksum)[2:],
+            "value": {key + 1: entropy for key, entropy in enumerate(self.value)}
+        }
 
     @property
-    def value(self) -> str:
+    def value(self) -> Tuple[str]:
         """
-        the mnemonic value.
+        Returns the list of words.
         :return:
         """
-        entropy_size = len(self._entropy)  # bits
-        checksum_size = len(self._checksum)  # bits
-        sequence_size = entropy_size + checksum_size  # bits
+        entropy_size = len(self._entropy) * 8  # bits
+        word_count, checksum_size = [
+           (w, c) for w, e, c in zip(WORD_COUNT_ALL, ENTROPY_SIZE_RANGE, CHECKSUM_SIZE_ALL) if e == entropy_size
+        ][0]
 
-        sequence = \
-            (
-                    int.from_bytes(self._entropy.value, byteorder="big") << checksum_size
-            ) | self._checksum.value
+        sequence = (int.from_bytes(self._entropy, byteorder="big") << checksum_size) | self.checksum
 
-        word_count = sequence_size // WORD_SIZE
-        return " ".join([
+        return tuple([
             str(
                 wordlist[
                     sequence >> ((word_count - i - 1) * WORD_SIZE) & (2 ** WORD_SIZE - 1)
@@ -259,14 +272,24 @@ class Mnemonic:
             ) for i in range(word_count)
         ])
 
-    @property
-    def info(self) -> dict:
+    def encode(self, passphrase: str = "") -> bytes:
         """
-        A descriptor for this mnemonic instance.
+        Generates the seed, encoding the mnemonic with an optional passphrase.
+        :param passphrase: an optional passphrase
         :return:
         """
-        return {
-            "entropy": self._entropy.value.hex(),
-            "checksum": hex(self._checksum.value)[2:],
-            "mnemonic": self.value,
-        }
+        passphrase = normalize_string(passphrase)
+        return hashlib.pbkdf2_hmac(
+            "sha512",
+            bytes(" ".join(self.value), 'utf-8'),
+            bytes("mnemonic" + passphrase, 'utf-8'), 2048
+        )
+
+    def transform(self, transformation: Transformation) -> "Mnemonic":
+        """
+        A function to transform the entropy that can be used to create some side-mnemonics for
+        plausible deniability.
+        :param transformation: the transformation to apply
+        :return:
+        """
+        return Mnemonic(transformation(self._entropy))
