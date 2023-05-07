@@ -25,9 +25,8 @@ import unicodedata
 
 def normalize_string(value: str) -> str:
     """
-    Normalizes a string removing extra spaces.
+    NFKD-UTF8 normalizes a string.
     :param value: the string to normalize
     :return:
     """
-    value = " ".join(str(value).split())
-    return unicodedata.normalize("NFKD", value)
+    return unicodedata.normalize("NFKD", str(value))
