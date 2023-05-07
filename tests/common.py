@@ -18,8 +18,6 @@
 #   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 import json
-import secrets
-import string
 from pathlib import Path
 
 import pytest
@@ -34,9 +32,3 @@ def load_data(section: str = "") -> dict:
     if section:
         data = data[section]
     return data
-
-
-@pytest.fixture
-def random_password() -> str:
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    return "".join(secrets.choice(alphabet) for i in range(12))
