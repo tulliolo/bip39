@@ -67,7 +67,7 @@ class Direction(enum.Enum):
 
 
 def __get_modified_pixels(image: Image, message: bytes, direction: Direction) -> Iterable[
-    Coordinates, Pixel, Pixel
+    Tuple[Coordinates, Pixel, Pixel]
 ]:
     """
     Traverses the image and returns the modified pixels.
