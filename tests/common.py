@@ -20,8 +20,6 @@
 import json
 from pathlib import Path
 
-import pytest
-
 
 def load_data(section: str = "") -> dict:
     path = Path(__file__).parent
