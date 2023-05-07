@@ -40,7 +40,7 @@ def format_entropy(value) -> str:
 def format_mnemonic(value) -> str:
     return (
         normalize_string(value) if isinstance(value, str) else
-        " ".join(value) if isinstance(value, Iterable) else
+        normalize_string(" ".join(value)) if isinstance(value, Iterable) else
         value
     )
 
