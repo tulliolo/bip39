@@ -23,9 +23,9 @@ import pathlib
 
 from tulliolo.bip39.cli import __prompt__ as prompt
 from tulliolo.bip39.cli.command import command
+from tulliolo.bip39.mnemonic import Mnemonic
 from tulliolo.bip39.utils import encryption
 from tulliolo.bip39.utils.common import normalize_string
-from tulliolo.bip39.utils.mnemonic import validate
 from tulliolo.bip39.utils.steganography import Direction, encode, decode
 
 PROG = "steganography"
@@ -50,7 +50,7 @@ def __run_encode(options: argparse.Namespace):
     :return:
     """
     print("enter a mnemonic:")
-    mnemonic = validate(normalize_string(input(prompt))).value
+    mnemonic = " ".join(Mnemonic.from_value(input(prompt)).value)
 
     print("\nenter a password to encrypt the mnemonic (or leave blank):")
     password = getpass.getpass(prompt=prompt)
@@ -118,35 +118,39 @@ def init_parser(parser: argparse.ArgumentParser):
     :param parser: the root parser
     :return:
     """
-    parser.add_argument(
+    subparsers = parser.add_subparsers(dest="subcommand", required=True, help="list of sub-commands")
+    eparser = subparsers.add_parser("encode", help="hide a mnemonic in an image with steganography")
+    dparser = subparsers.add_parser("decode", help="reveal a mnemonic in an image with steganography")
+
+    eparser.add_argument(
         "-i", "--input-file",
         type=argparse.FileType('rb'),
         required=True,
         help=f"the source image file"
     )
-    parser.add_argument(
+    dparser.add_argument(
+        "-i", "--input-file",
+        type=argparse.FileType('rb'),
+        required=True,
+        help=f"the source image file"
+    )
+    eparser.add_argument(
         "-o", "--output-path",
         type=pathlib.Path,
         default=".",
         help=f"the destination path (DEFAULT is the current path)"
     )
-    parser.add_argument(
+    eparser.add_argument(
         "-r", "--read-direction",
         choices=[direction.value for direction in Direction],
         default=Direction.DEFAULT.value,
         help=f"traverse the image pixels in different directions (DEFAULT={Direction.DEFAULT.value})"
     )
-
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        "-d", "--decode",
-        action="store_true",
-        help="decode a mnemonic from an image file"
-    )
-    group.add_argument(
-        "-e", "--encode",
-        action="store_true",
-        help="encode a mnemonic in an image file"
+    dparser.add_argument(
+        "-r", "--read-direction",
+        choices=[direction.value for direction in Direction],
+        default=Direction.DEFAULT.value,
+        help=f"traverse the image pixels in different directions (DEFAULT={Direction.DEFAULT.value})"
     )
 
 
@@ -159,7 +163,7 @@ def run_command(options: argparse.Namespace):
     :param options: the full list of cli options
     :return:
     """
-    if options.encode:
+    if options.subcommand == "encode":
         __run_encode(options)
     else:
         __run_decode(options)
