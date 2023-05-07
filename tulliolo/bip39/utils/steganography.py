@@ -27,10 +27,15 @@ import operator
 import pathlib
 import time
 from io import FileIO
+from typing import Tuple, Iterable
 
 from PIL import Image
 
 LOGGER = logging.getLogger(__name__)
+
+
+Coordinates = Tuple[int, int]
+Pixel = Tuple[int, int, int]
 
 
 class Direction(enum.Enum):
@@ -61,8 +66,8 @@ class Direction(enum.Enum):
         )
 
 
-def __get_modified_pixels(image: Image, message: bytes, direction: Direction) -> tuple[
-    tuple[int, int], tuple[int, int, int], tuple[int, int, int]
+def __get_modified_pixels(image: Image, message: bytes, direction: Direction) -> Iterable[
+    Tuple[Coordinates, Pixel, Pixel]
 ]:
     """
     Traverses the image and returns the modified pixels.
@@ -96,7 +101,7 @@ def __get_modified_pixels(image: Image, message: bytes, direction: Direction) ->
                 )
 
 
-def __get_pixel(image: Image, direction: Direction, ordinal: int):
+def __get_pixel(image: Image, direction: Direction, ordinal: int) -> Tuple[Coordinates, Pixel]:
     """
     Gets the nth pixel in the desired direction.
     :param image: the image
