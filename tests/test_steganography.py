@@ -22,10 +22,9 @@ import logging
 import pathlib
 import pytest
 
-from tests.common import get_vector_data
-from tulliolo.bip39.mnemonic import WORD_COUNT_ALL
+from tests.common import load_data
+from tulliolo.bip39.mnemonic import WORD_COUNT_ALL, Mnemonic
 from tulliolo.bip39.utils import steganography
-from tulliolo.bip39.utils.mnemonic import validate, generate
 
 LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ def init_module():
 
 
 def run_test(
-        vcount, dcount, type,
+        vcount, dcount, test_type,
         mnemonic, direction
 ):
     output_file = None
@@ -54,7 +53,7 @@ def run_test(
             "mnemonic": mnemonic,
             "direction": direction.value
         }
-        LOGGER.info(f"START test {type} {vcount}.{dcount}:\n{json.dumps(test_dict, indent=2)}")
+        LOGGER.info(f"START test {test_type} {vcount}.{dcount}:\n{json.dumps(test_dict, indent=2)}")
 
         output_file = steganography.encode(
             mnemonic,
@@ -77,19 +76,19 @@ def run_test(
         if output_file:
             output_file.unlink()
 
-        LOGGER.info(f"STOP  test {type} {vcount}.{dcount}")
+        LOGGER.info(f"STOP  test {test_type} {vcount}.{dcount}")
 
 
 class TestStatic:
     @pytest.mark.parametrize("iter_direction", enumerate([direction for direction in steganography.Direction]))
-    @pytest.mark.parametrize("iter_data", enumerate(get_vector_data()))
+    @pytest.mark.parametrize("iter_data", enumerate(load_data("vector")))
     def test_static(self, iter_direction, iter_data):
         vcount, vector = iter_data
         dcount, direction = iter_direction
         vcount += 1
 
         vector["direction"] = direction.value
-        mnemonic = validate(vector["mnemonic"]).value
+        mnemonic = " ".join(Mnemonic(vector["entropy"]).value)
 
         run_test(
             vcount, dcount, "static",
@@ -105,7 +104,7 @@ class TestDynamic:
         dcount, direction = iter_direction
         vcount += 1
 
-        mnemonic = generate(size).value
+        mnemonic = " ".join(Mnemonic.generate(size).value)
 
         run_test(
             vcount, dcount, "dynamic",
