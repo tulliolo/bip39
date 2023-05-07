@@ -22,12 +22,18 @@ import readline
 
 from tulliolo.bip39.cli import __prompt__ as prompt
 from tulliolo.bip39.cli.command import command
-from tulliolo.bip39.entropy import TransformationAlgorithm
-from tulliolo.bip39.utils.common import normalize_string
-from tulliolo.bip39.utils.mnemonic import transform, validate
+from tulliolo.bip39.mnemonic import WORD_COUNT_ALL, Mnemonic
+from tulliolo.bip39.utils.transformation import Transformation
 
 PROG = "transform"
 HELP = "transform a mnemonic for plausible deniability"
+
+WORD_COUNT_SPLIT = [
+    wcount for wcount in WORD_COUNT_ALL if not (wcount % 2) and (wcount // 2) in WORD_COUNT_ALL
+]
+WORD_COUNT_JOIN = [
+    wcount for wcount in WORD_COUNT_ALL if (wcount * 2) in WORD_COUNT_ALL
+]
 
 
 def init_parser(parser: argparse.ArgumentParser):
@@ -37,21 +43,23 @@ def init_parser(parser: argparse.ArgumentParser):
     :return:
     """
     parser.add_argument(
-        "-a", "--algorithm",
-        choices=[a.value for a in TransformationAlgorithm],
-        default=TransformationAlgorithm.DEFAULT.value,
-        help=f"the algorithm to apply on entropy (DEFAULT={TransformationAlgorithm.DEFAULT.value})"
+        "-t", "--transformation",
+        choices=[t.value for t in Transformation],
+        default=Transformation.DEFAULT.value,
+        help=f"the transformation to apply on entropy (DEFAULT={Transformation.DEFAULT.value})"
     )
     group = parser.add_mutually_exclusive_group()
     group.add_argument(
         "-s", "--split",
         action="store_true",
-        help="split a 24 words mnemonic in two 12 words mnemonics"
+        help=f"split a {', '.join(str(wcount) for wcount in WORD_COUNT_SPLIT)} words mnemonic "
+             f"in two {', '.join(str(wcount) for wcount in WORD_COUNT_JOIN)} words mnemonics"
     )
     group.add_argument(
         "-j", "--join",
         action="store_true",
-        help="join two 12 words mnemonics in a 24 words mnemonic"
+        help=f"join two {', '.join(str(wcount) for wcount in WORD_COUNT_JOIN)} words mnemonics "
+             f"in a {', '.join(str(wcount) for wcount in WORD_COUNT_SPLIT)} words mnemonic"
     )
 
 
@@ -60,7 +68,7 @@ def run_command(options: argparse.Namespace):
     """
     Transforms (and rebuilds) a mnemonic using the following options:
 
-    - -a, --algorithm: the transformation algorithm; allowed algorithms are:
+    - -t, --transformation: the transformation to apply; allowed transformations are:
 
       - negative: invert all entropy bits, like in a negative
       - mirror: read entropy bits from right to left, like in front of a mirror
@@ -76,17 +84,37 @@ def run_command(options: argparse.Namespace):
             "first" if options.join and i == 0 else "second" if options.join and i == 1 else "a",
             "mnemonic"
         )
-        mnemonics.append(validate(normalize_string(input(prompt))).value)
+        mnemonics.append(Mnemonic.from_value(input(prompt)))
     print()
+
+    if options.split and len(mnemonics[0]) not in WORD_COUNT_SPLIT:
+        raise ValueError(
+            "invalid mnemonic size:",
+            f"expected: {', '.join(str(wcount) for wcount in WORD_COUNT_SPLIT)}",
+            f"obtained: {len(mnemonics[0])}"
+        )
+
+    if options.join and not (
+            len(mnemonics[0]) == len(mnemonics[1]) and
+            all([len(mnemonic) in WORD_COUNT_JOIN for mnemonic in mnemonics])
+    ):
+        raise ValueError(
+            "invalid mnemonics size:",
+            f"both mnemonics must be {', '.join(str(wcount) for wcount in WORD_COUNT_JOIN)} words length"
+        )
 
     print(
         "splitting" if options.split else "joining" if options.join else "applying",
-        f"{options.algorithm} transformation..."
-    )
-    result = transform(
-        *mnemonics, algorithm=TransformationAlgorithm(normalize_string(options.algorithm)),
-        split=options.split, join=options.join
+        f"{options.transformation} transformation..."
     )
 
+    result = Mnemonic(mnemonics[0].entropy + mnemonics[1].entropy) if options.join else mnemonics[0]
+    result = result.transform(Transformation(options.transformation))
+
+    result = [
+        Mnemonic(result.entropy[:len(result.entropy) // 2]),
+        Mnemonic(result.entropy[len(result.entropy) // 2:])
+    ] if options.split else [result]
+
     print("\ntransformation success!")
-    print("\n".join(m.value for m in result))
+    print("\n".join(" ".join(m.value) for m in result))
