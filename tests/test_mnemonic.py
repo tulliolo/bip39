@@ -26,8 +26,7 @@ from typing import Iterable
 import pytest
 
 from tests.common import load_data
-from tulliolo.bip39.entropy import Transformation
-from tulliolo.bip39.mnemonic import Mnemonic, WORD_COUNT_ALL
+from tulliolo.bip39.mnemonic import Mnemonic, Transformation, WORD_COUNT_ALL
 from tulliolo.bip39.utils.common import normalize_string
 
 LOGGER = logging.getLogger(__name__)
