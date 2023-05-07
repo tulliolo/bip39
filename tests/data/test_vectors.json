@@ -168,7 +168,7 @@
         },
         {
             "mnemonic": "abandon abandon abandon abandon abandon pippo abandon abandon abandon abandon abandon about",
-            "error": "invalid mnemonic"
+            "error": "invalid mnemonic value"
         },
         {
             "mnemonic": "abandon",
@@ -180,7 +180,7 @@
         },
         {
             "mnemonic": "abandon abandon pippo abandon abandon abandon abandon abandon abandon abandon abandon about",
-            "error": "invalid mnemonic"
+            "error": "invalid mnemonic value"
         },
         {
             "mnemonic": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon",

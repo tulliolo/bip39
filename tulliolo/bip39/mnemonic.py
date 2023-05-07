@@ -102,7 +102,7 @@ class Mnemonic:
                 f"obtained: {entropy_size} bits"
             )
             LOGGER.error(" | ".join(args))
-            raise ValueError(args)
+            raise ValueError(*args)
 
         self._entropy = entropy
 
@@ -122,7 +122,7 @@ class Mnemonic:
         return WORD_COUNT_ALL[ENTROPY_SIZE_RANGE.index(entropy_size)]
 
     @classmethod
-    def from_words(cls, value: str | Iterable[str], fix_checksum: bool = False) -> "Mnemonic":
+    def from_value(cls, value: str | Iterable[str], fix_checksum: bool = False) -> "Mnemonic":
         """
         Creates a new mnemonic instance from a list of words.
         :param value: the list of words
@@ -140,7 +140,7 @@ class Mnemonic:
                 f"cannot convert {type(value)} to mnemonic"
             )
             LOGGER.error(" | ".join(args))
-            raise TypeError(args)
+            raise TypeError(*args)
 
         word_count = len(value)
         if word_count not in WORD_COUNT_ALL:
@@ -150,7 +150,7 @@ class Mnemonic:
                 f"obtained: {word_count} words"
             )
             LOGGER.error(" | ".join(args))
-            raise ValueError(args)
+            raise ValueError(*args)
 
         entropy_size, checksum_size = [
             (e, c) for w, e, c in zip(WORD_COUNT_ALL, ENTROPY_SIZE_RANGE, CHECKSUM_SIZE_ALL)
@@ -186,7 +186,7 @@ class Mnemonic:
                 LOGGER.warning(" | ".join(args))
             else:
                 LOGGER.error(" | ".join(args))
-                raise ValueError(args)
+                raise ValueError(*args)
 
         return result
 
@@ -205,7 +205,7 @@ class Mnemonic:
                     f"obtained: {size} words"
                 )
                 LOGGER.error(" | ".join(args))
-                raise ValueError(args)
+                raise ValueError(*args)
 
             entropy_size = ENTROPY_SIZE_RANGE[WORD_COUNT_ALL.index(size)] // 8  # bytes
             token = secrets.token_bytes(entropy_size)
