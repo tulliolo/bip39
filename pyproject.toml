@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools"]
+requires = ["setuptools", "setuptools_scm[toml]"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -34,11 +34,10 @@ dynamic = ["dependencies", "version"]
 bip39-cli = "tulliolo.bip39.cli.__main__:main"
 
 [tool.setuptools]
-packages = [
-    "tulliolo.bip39",
-    "tulliolo.bip39.cli",
-    "tulliolo.bip39.utils"
-]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+mypkg = ["data/*"]
 
 [tool.setuptools.dynamic]
 dependencies = {file = ["requirements.txt"]}
