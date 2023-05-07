@@ -19,12 +19,10 @@
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 import argparse
 import readline
-import sys
 
 from tulliolo.bip39.cli import __prompt__ as prompt
 from tulliolo.bip39.cli.command import command
 from tulliolo.bip39.mnemonic import Mnemonic
-from tulliolo.bip39.utils.common import normalize_string
 
 PROG = "validate"
 HELP = "generate a mnemonic"
