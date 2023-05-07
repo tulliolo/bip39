@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 #
-#   Copyright (C) 2022 Tullio Loffredo, @tulliolo
+#   Copyright (C) 2023 Tullio Loffredo (@tulliolo)
 #
 #   It is subject to the license terms in the LICENSE file found in the top-level
 #   directory of this distribution.
