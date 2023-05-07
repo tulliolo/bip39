@@ -20,8 +20,7 @@
 import argparse
 
 from tulliolo.bip39.cli.command import command
-from tulliolo.bip39.mnemonic import WORD_COUNT_ALL
-from tulliolo.bip39.utils.mnemonic import generate
+from tulliolo.bip39.mnemonic import WORD_COUNT_ALL, Mnemonic
 
 PROG = "generate"
 HELP = "generate a mnemonic"
@@ -52,6 +51,6 @@ def run_command(options: argparse.Namespace):
     :return:
     """
     print(f"generating a {options.size} words mnemonic...")
-    mnemonic = generate(options.size)
+    mnemonic = Mnemonic.generate(options.size)
     print("\ngenerate success!")
-    print(mnemonic.value)
+    print(" ".join(mnemonic.value))
