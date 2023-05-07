@@ -22,9 +22,9 @@ import readline
 import sys
 
 from tulliolo.bip39.cli import __prompt__ as prompt
-from tulliolo.bip39.utils.common import normalize_string
 from tulliolo.bip39.cli.command import command
-from tulliolo.bip39.utils.mnemonic import validate
+from tulliolo.bip39.mnemonic import Mnemonic
+from tulliolo.bip39.utils.common import normalize_string
 
 PROG = "validate"
 HELP = "generate a mnemonic"
@@ -54,9 +54,9 @@ def run_command(options: argparse.Namespace):
     :return:
     """
     print("enter a mnemonic:")
-    mnemonic = normalize_string(input(prompt))
+    mnemonic = " ".join(input(prompt).split())
 
-    result = validate(mnemonic, fix_checksum=options.fix_checksum).value
+    result = " ".join(Mnemonic.from_value(mnemonic, options.fix_checksum).value)
 
     if result == mnemonic:
         print(f"\nvalidation success!")
