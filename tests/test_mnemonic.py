@@ -19,15 +19,16 @@
 #   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 import json
 import logging
+import secrets
+import string
 from typing import Iterable
 
 import pytest
 
 from tests.common import load_data
-from tulliolo.bip39.entropy import Entropy, Transformation
+from tulliolo.bip39.entropy import Transformation
 from tulliolo.bip39.mnemonic import Mnemonic, WORD_COUNT_ALL
 from tulliolo.bip39.utils.common import normalize_string
-from tulliolo.bip39.utils.mnemonic import generate, validate, transform
 
 LOGGER = logging.getLogger(__name__)
 
@@ -48,23 +49,49 @@ def format_mnemonic(value) -> str:
 def passphrase() -> str:
     return "TREZOR"
 
+@pytest.fixture
+def random_passphrase() -> str:
+    alphabet = string.ascii_letters + string.digits + string.punctuation
+    return "".join(secrets.choice(alphabet) for i in range(12))
+
 
 class TestStatic:
+    @pytest.mark.parametrize("iter_transformation", enumerate([None, Transformation.NEGATIVE, Transformation.MIRROR]))
     @pytest.mark.parametrize("iter_data", enumerate(load_data("vector")))
-    def test_static(self, iter_data, passphrase):
-        count, vector = iter_data
-        count += 1
-        LOGGER.info(f"START test static {count}:\n{json.dumps(vector, indent=2)}")
+    def test_static(self, iter_transformation, iter_data, passphrase):
+        vcount, vector = iter_data
+        tcount, transformation = iter_transformation
+        vcount += 1
+
+        if transformation:
+            vector["transformation"] = transformation.value
+        LOGGER.info(f"START test static {vcount}.{tcount}:\n{json.dumps(vector, indent=2)}")
 
         mnemonic_e = Mnemonic(vector["entropy"])
         LOGGER.info(f"generated mnemonic from entropy:\n{json.dumps(mnemonic_e.info, indent=2)}")
 
         mnemonic_w = Mnemonic.from_value(vector["mnemonic"])
-        LOGGER.info(f"generated mnemonic from words:\n{json.dumps(mnemonic_w.info, indent=2)}")
+        LOGGER.info(f"generated mnemonic from value:\n{json.dumps(mnemonic_w.info, indent=2)}")
+
+        if transformation:
+            for i in range(2):
+                mnemonic_e = mnemonic_e.transform(transformation)
+                LOGGER.info(
+                    f"applied {'first' if i == 0 else 'second'} "
+                    f"{transformation} transformation to mnemonic from entropy:\n"
+                    f"{json.dumps(mnemonic_e.info, indent=2)}"
+                )
+
+                mnemonic_w = mnemonic_w.transform(transformation)
+                LOGGER.info(
+                    f"applied {'first' if i == 0 else 'second'} "
+                    f"{transformation} transformation to mnemonic from value:\n"
+                    f"{json.dumps(mnemonic_w.info, indent=2)}"
+                )
 
         assert mnemonic_e == mnemonic_w, (
             "mnemonic objects mismatch",
-            "mnemonics generated from entropy and from words does not match"
+            "mnemonics generated from entropy and from value does not match"
         )
 
         value_e = format_entropy(vector["entropy"])
@@ -94,7 +121,7 @@ class TestStatic:
             f"obtained: {value_oe}, {value_ow}"
         )
 
-        LOGGER.info(f"STOP  test static {count}")
+        LOGGER.info(f"STOP  test static {vcount}.{tcount}")
 
 
 class TestError:
@@ -118,78 +145,38 @@ class TestError:
             LOGGER.info(f"STOP  test error {count}")
 
 
-# class TestDynamic:
-#     @pytest.mark.parametrize("iter_data", enumerate(WORD_COUNT_ALL))
-#     def test_dynamic(self, iter_data):
-#         count, size = iter_data
-#         count += 1
-#         LOGGER.info(f"START test dynamic {count}: {size}")
-#
-#         mnemonic = generate(size)
-#         LOGGER.info(f"generated mnemonic:\n{json.dumps(mnemonic.info, indent=2)}")
-#
-#         LOGGER.info(f"STOP  test dynamic {count}")
-#
-#
-# class TestError:
-#     @pytest.mark.parametrize("iter_data", enumerate(get_error_data("mnemonic")))
-#     def test_error(self, iter_data):
-#         count, vector = iter_data
-#         count += 1
-#         LOGGER.info(f"START test error {count}:\n{json.dumps(vector, indent=2)}")
-#
-#         try:
-#             Mnemonic.from_words(vector["mnemonic"])
-#             raise ValueError("the test was successful...")
-#         except Exception as e:
-#             LOGGER.error(" | ".join(e.args))
-#             assert e.args[0] == vector["error"], (
-#                 "error mismatch\n\t",
-#                 f"expected: {vector['error']}",
-#                 f"obtained: {e.args[0]}"
-#             )
-#         finally:
-#             LOGGER.info(f"STOP  test error {count}")
-#
-#
-# class TestTransform:
-#     @pytest.mark.parametrize("iter_data", enumerate(get_vector_data()))
-#     @pytest.mark.parametrize("iter_algorithm", enumerate([algorithm for algorithm in Transformation]))
-#     def test_transformation(self, iter_data, iter_algorithm):
-#         vcount, vector = iter_data
-#         acount, algorithm = iter_algorithm
-#         vcount += 1
-#
-#         mnemonic = validate(vector["mnemonic"])
-#         test_dict = {
-#             "mnemonic": mnemonic.value,
-#             "transformation": algorithm.value
-#         }
-#         LOGGER.info(f"START test transformation {vcount}.{acount}:\n{json.dumps(test_dict, indent=2)}")
-#
-#         result = transform(mnemonic.value, algorithm=algorithm)[0]
-#         LOGGER.info(f"applied {algorithm.value} transformation: {result.value}")
-#
-#         result = transform(result.value, algorithm=algorithm)[0]
-#         LOGGER.info(f"applied {algorithm.value} transformation: {result.value}")
-#
-#         assert result == mnemonic, (
-#             "mnemonic mismatch!"
-#             f"expected: {mnemonic.value}"
-#             f"obtained: {result.value}"
-#         )
-#
-#         if len(mnemonic) == max(WORD_COUNT_ALL):
-#             result = transform(mnemonic.value, algorithm=algorithm, split=True)
-#             LOGGER.info(f"splitting with {algorithm.value} transformation: {' | '.join(m.value for m in result)}")
-#
-#             result = transform(*[m.value for m in result], algorithm=algorithm, join=True)[0]
-#             LOGGER.info(f"joining with {algorithm.value} transformation: {result.value}")
-#
-#             assert result == mnemonic, (
-#                 "mnemonic mismatch!"
-#                 f"expected: {mnemonic.value}"
-#                 f"obtained: {result.value}"
-#             )
-#
-#         LOGGER.info(f"STOP  test transformation {vcount}.{acount}")
+class TestDynamic:
+    @pytest.mark.parametrize("iter_transformation", enumerate([None, Transformation.NEGATIVE, Transformation.MIRROR]))
+    @pytest.mark.parametrize("iter_data", enumerate(WORD_COUNT_ALL))
+    def test_dynamic(self, iter_transformation, iter_data, random_passphrase):
+        scount, size = iter_data
+        tcount, transformation = iter_transformation
+        scount += 1
+
+        LOGGER.info(
+            f"START test dynamic {scount}.{tcount}: {size}.{transformation.value if transformation else 'none'}"
+        )
+
+        mnemonic = Mnemonic.generate(size)
+        LOGGER.info(f"generated mnemonic:\n{json.dumps(mnemonic.info, indent=2)}")
+
+        if transformation:
+            mnemonic_t = mnemonic
+            for i in range(2):
+                mnemonic_t = mnemonic_t.transform(transformation)
+                LOGGER.info(
+                    f"applied {'first' if i == 0 else 'second'} "
+                    f"{transformation} transformation to mnemonic from entropy:\n"
+                    f"{json.dumps(mnemonic_t.info, indent=2)}"
+                )
+
+            assert mnemonic == mnemonic_t and mnemonic.info == mnemonic_t.info, (
+                "mnemonic mismatch",
+                f"expected: {mnemonic.value}"
+                f"obtained: {mnemonic_t.value}"
+            )
+
+        seed = mnemonic.encode(random_passphrase).hex()
+        LOGGER.info(f"encoded mnemonic with '{random_passphrase}' passphrase: {seed}")
+
+        LOGGER.info(f"STOP  test dynamic {scount}.{tcount}")
