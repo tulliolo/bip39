@@ -14,6 +14,12 @@ For further details, please refer to the [documentation folder](https://github.c
 ## Requirements
 python 3.10+
 
+## Installation
+This project is distributed on [PyPI](https://pypi.org/):
+```
+pip install tulliolo.bip39
+```
+
 ## Disclaimer
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
