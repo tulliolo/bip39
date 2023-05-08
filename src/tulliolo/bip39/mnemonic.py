@@ -60,8 +60,8 @@ class Mnemonic:
     A class implementing the bip39 specs:
     https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 
-    The class also provides a function to transform the entropy that can be used to create some side-mnemonics for
-    plausible deniability.
+    The class also provides a function to transform (or restore) the entropy that can be used to create some
+    side-mnemonics hiding the original.
     """
     def __init__(self, entropy: ByteString | HexString | int):
         """
@@ -287,8 +287,8 @@ class Mnemonic:
 
     def transform(self, transformation: Transformation) -> "Mnemonic":
         """
-        A function to transform the entropy that can be used to create some side-mnemonics for
-        plausible deniability.
+        A function to transform (or restore) the entropy that can be used to create some side-mnemonics hiding the
+        original.
         :param transformation: the transformation to apply
         :return:
         """

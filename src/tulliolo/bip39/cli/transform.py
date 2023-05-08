@@ -26,7 +26,7 @@ from tulliolo.bip39.mnemonic import WORD_COUNT_ALL, Mnemonic
 from tulliolo.bip39.utils.transformation import Transformation
 
 PROG = "transform"
-HELP = "transform a mnemonic for plausible deniability"
+HELP = "transform (or restore) a mnemonic, e.g. to create side-wallets hiding the original"
 
 WORD_COUNT_SPLIT = [
     wcount for wcount in WORD_COUNT_ALL if not (wcount % 2) and (wcount // 2) in WORD_COUNT_ALL

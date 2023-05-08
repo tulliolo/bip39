@@ -26,7 +26,7 @@ from tulliolo.bip39.mnemonic import Mnemonic
 from tulliolo.bip39.utils.common import normalize_string
 
 PROG = "validate"
-HELP = "generate a mnemonic"
+HELP = "validate a mnemonic, or correct the last word according to the checksum"
 
 
 def init_parser(parser: argparse.ArgumentParser):
