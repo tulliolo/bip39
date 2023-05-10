@@ -135,7 +135,7 @@ print(" ".join(mnemonic.value))
 absent deny citizen next velvet where mixture glimpse deposit sentence hat manual
 ```
 
-Import a mnemonic fixing the checksum:
+Import a mnemonic and fix the checksum:
 ```
 from tulliolo.bip39.mnemonic import Mnemonic
 
@@ -143,7 +143,16 @@ mnemonic = Mnemonic.from_value("view fresh drink impulse doctor wise another smo
 print(mnemonic.info)
 
 {'entropy': 'f3eb990c391405f8c266668125b3b1b8', 'checksum': '0', 'value': {1: 'view', 2: 'fresh', 3: 'drink', 4: 'impulse', 5: 'doctor', 6: 'wise', 7: 'another', 8: 'smoke', 9: 'license', 10: 'collect', 11: 'unaware', 12: 'hybrid'}}
+```
 
+Generate the seed, that can be later used to generate bip32 wallets:
+```
+from tulliolo.bip39.mnemonic import Mnemonic
+
+seed = Mnemonic.generate(24).encode(passphrase="my_optional_passphrase")
+print(seed.hex())
+
+d24027e4b7dae545b95dca96a7b8e539e0a0d7ae2ef6cd2247e346907f7b842bb93d2268ee3bd28eede481b0ddab0b44f04ed49b4a4904ee7882677dd2677ac2
 ```
 
 
