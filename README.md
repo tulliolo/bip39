@@ -20,6 +20,38 @@ This project is distributed on [PyPI](https://pypi.org/):
 pip install tulliolo.bip39
 ```
 
+## Usage Examples
+Here are some examples of using the library and CLI.
+
+### CLI
+Generate a new 24 words mnemonic:
+```
+$ bip39-cli generate -s 24
+******************
+* bip39-cli v0.2 *
+******************
+
+generating a 24 words mnemonic...
+
+generate success!
+view fresh drink impulse doctor wise another smoke license collect unaware immense normal trick second owner subway bright chaos upper ribbon kite debris quote
+```
+
+Validate a mnemonic, correcting the checksum:
+```
+$ bip39-cli validate -f
+******************
+* bip39-cli v0.2 *
+******************
+
+enter a mnemonic:
+₿ view fresh drink impulse doctor wise another smoke license collect unaware immense
+invalid checksum | expected: 0 | obtained: c
+
+validation success... with fixed checksum:
+view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+```
+
 ## Disclaimer
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
