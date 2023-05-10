@@ -123,6 +123,30 @@ decrypting success!
 view fresh drink impulse doctor wise another smoke license collect unaware hybrid
 ```
 
+### Library
+Generate a 12 words mnemonic:
+
+```
+from tulliolo.bip39.mnemonic import Mnemonic
+
+mnemonic = Mnemonic.generate(12)
+print(" ".join(mnemonic.value))
+
+absent deny citizen next velvet where mixture glimpse deposit sentence hat manual
+```
+
+Import a mnemonic fixing the checksum:
+```
+from tulliolo.bip39.mnemonic import Mnemonic
+
+mnemonic = Mnemonic.from_value("view fresh drink impulse doctor wise another smoke license collect unaware immense", fix_checksum=True)
+print(mnemonic.info)
+
+{'entropy': 'f3eb990c391405f8c266668125b3b1b8', 'checksum': '0', 'value': {1: 'view', 2: 'fresh', 3: 'drink', 4: 'impulse', 5: 'doctor', 6: 'wise', 7: 'another', 8: 'smoke', 9: 'license', 10: 'collect', 11: 'unaware', 12: 'hybrid'}}
+
+```
+
+
 ## Disclaimer
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
