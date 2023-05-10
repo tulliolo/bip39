@@ -52,6 +52,77 @@ validation success... with fixed checksum:
 view fresh drink impulse doctor wise another smoke license collect unaware hybrid
 ```
 
+Transform and restore a mnemonic:
+```
+$ bip39-cli transform
+******************
+* bip39-cli v0.2 *
+******************
+
+enter a mnemonic
+₿ view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+
+applying negative transformation...
+
+transformation success!
+army permit rude miss sausage adjust wait creek learn sponsor bean mixed
+
+$ bip39-cli transform
+******************
+* bip39-cli v0.2 *
+******************
+
+enter a mnemonic
+₿ army permit rude miss sausage adjust wait creek learn sponsor bean mixed
+
+applying negative transformation...
+
+transformation success!
+view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+```
+
+Hide a mnemonic in an image with steganography:
+```
+$ bip39-cli steganography encode -i tests/data/test_image.jpg -o tests/data/output/
+******************
+* bip39-cli v0.2 *
+******************
+
+enter a mnemonic:
+₿ view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+
+enter a password to encrypt the mnemonic (or leave blank):
+₿ 
+insert again...:
+₿ 
+encrypting mnemonic...
+
+encoding image...
+
+encoding success!
+tests/data/output/test_image_horizontal_20230510-120631.png
+```
+
+Reveal a mnemonic from an image with steganography:
+```
+$ bip39-cli steganography decode -i tests/data/output/test_image_horizontal_20230510-120631.png 
+******************
+* bip39-cli v0.2 *
+******************
+
+enter a password to decrypt the mnemonic (or leave blank):
+₿ 
+insert again...:
+₿ 
+
+decoding image...
+decoding success!
+
+decrypting mnemonic...
+decrypting success!
+view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+```
+
 ## Disclaimer
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
