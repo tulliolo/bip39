@@ -155,6 +155,24 @@ print(seed.hex())
 d24027e4b7dae545b95dca96a7b8e539e0a0d7ae2ef6cd2247e346907f7b842bb93d2268ee3bd28eede481b0ddab0b44f04ed49b4a4904ee7882677dd2677ac2
 ```
 
+Transform and restore a mnemonic with a "mirror" transformation:
+```
+from tulliolo.bip39.mnemonic import Mnemonic
+from tulliolo.bip39.utils.transformation import Transformation
+
+mnemonic_o = Mnemonic.from_value("view fresh drink impulse doctor wise another smoke license collect unaware hybrid")
+mnemonic_t = mnemonic_o.transform(Transformation.MIRROR)
+print(mnemonic_t.value)
+
+('budget', 'hover', 'hard', 'actress', 'grid', 'canoe', 'leader', 'agree', 'order', 'luggage', 'invest', 'paddle')
+
+mnemonic_t = mnemonic_t.transform(Transformation.MIRROR)
+assert mnemonic_o == mnemonic_t
+print(mnemonic_t.value)
+
+('view', 'fresh', 'drink', 'impulse', 'doctor', 'wise', 'another', 'smoke', 'license', 'collect', 'unaware', 'hybrid')
+```
+
 
 ## Disclaimer
 
