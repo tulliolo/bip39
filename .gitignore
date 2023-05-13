@@ -2,6 +2,7 @@
 build
 dist
 tests/data/output
+venv*
 *.egg-info
 **/__pycache__
 **/.pytest_cache
