@@ -20,6 +20,8 @@
 """
 Some utilities to hide/reveal messages in images with a steganograpy algorithm.
 """
+from __future__ import annotations
+
 import enum
 import logging
 import math

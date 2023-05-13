@@ -21,6 +21,8 @@
 A module implementing the bip39 specs:
 https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki
 """
+from __future__ import annotations
+
 import hashlib
 import logging
 import math
@@ -122,7 +124,7 @@ class Mnemonic:
         return WORD_COUNT_ALL[ENTROPY_SIZE_RANGE.index(entropy_size)]
 
     @classmethod
-    def from_value(cls, value: str | Iterable[str], fix_checksum: bool = False) -> "Mnemonic":
+    def from_value(cls, value: str | Iterable[str], fix_checksum: bool = False) -> Mnemonic:
         """
         Creates a new mnemonic instance from a list of words.
         :param value: the list of words
@@ -191,7 +193,7 @@ class Mnemonic:
         return result
 
     @classmethod
-    def generate(cls, size: int) -> "Mnemonic":
+    def generate(cls, size: int) -> Mnemonic:
         """
         Generates a new mnemonic instance using a cryptographically secure generator.
         :param size: the mnemonic length in words
@@ -285,7 +287,7 @@ class Mnemonic:
             bytes("mnemonic" + passphrase, 'utf-8'), 2048
         )
 
-    def transform(self, transformation: Transformation) -> "Mnemonic":
+    def transform(self, transformation: Transformation) -> Mnemonic:
         """
         A function to transform (or restore) the entropy that can be used to create some side-mnemonics hiding the
         original.

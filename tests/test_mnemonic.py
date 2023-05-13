@@ -48,6 +48,7 @@ def format_mnemonic(value) -> str:
 def passphrase() -> str:
     return "TREZOR"
 
+
 @pytest.fixture
 def random_passphrase() -> str:
     alphabet = string.ascii_letters + string.digits + string.punctuation

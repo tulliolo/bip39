@@ -20,6 +20,7 @@
 import argparse
 import getpass
 import pathlib
+import readline
 
 from tulliolo.bip39.cli import __prompt__ as prompt
 from tulliolo.bip39.cli.command import command
