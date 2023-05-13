@@ -10,7 +10,7 @@ authors = [
 description = "A bip39 implementation, with a collection of tools"
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.7"
 keywords = [
     "bitcoin", "bip39", "entropy", "mnemonic", "seed",
     "cryptography", "steganography"
