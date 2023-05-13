@@ -24,7 +24,7 @@ pip install tulliolo.bip39
 Here are some examples of using the library and CLI.
 
 ### CLI
-Generate a new 24 words mnemonic:
+**Generate** a new 24 words mnemonic:
 ```
 $ bip39-cli generate -s 24
 ******************
@@ -37,7 +37,7 @@ generate success!
 view fresh drink impulse doctor wise another smoke license collect unaware immense normal trick second owner subway bright chaos upper ribbon kite debris quote
 ```
 
-Validate a mnemonic, correcting the checksum:
+**Validate** a mnemonic, fixing the checksum:
 ```
 $ bip39-cli validate -f
 ******************
@@ -52,7 +52,7 @@ validation success... with fixed checksum:
 view fresh drink impulse doctor wise another smoke license collect unaware hybrid
 ```
 
-Transform and restore a mnemonic:
+**Transform** and restore a mnemonic with a _negative_ (default) transformation:
 ```
 $ bip39-cli transform
 ******************
@@ -81,7 +81,7 @@ transformation success!
 view fresh drink impulse doctor wise another smoke license collect unaware hybrid
 ```
 
-Hide a mnemonic in an image with steganography:
+**Hide** a mnemonic in an image with steganography:
 ```
 $ bip39-cli steganography encode -i tests/data/test_image.jpg -o tests/data/output/
 ******************
@@ -103,7 +103,7 @@ encoding success!
 tests/data/output/test_image_horizontal_20230510-120631.png
 ```
 
-Reveal a mnemonic from an image with steganography:
+**Reveal** a mnemonic from an image with steganography:
 ```
 $ bip39-cli steganography decode -i tests/data/output/test_image_horizontal_20230510-120631.png 
 ******************
@@ -124,7 +124,7 @@ view fresh drink impulse doctor wise another smoke license collect unaware hybri
 ```
 
 ### Library
-Generate a 12 words mnemonic:
+**Generate** a 12 words mnemonic:
 
 ```
 from tulliolo.bip39.mnemonic import Mnemonic
@@ -135,7 +135,7 @@ print(" ".join(mnemonic.value))
 absent deny citizen next velvet where mixture glimpse deposit sentence hat manual
 ```
 
-Import a mnemonic and fix the checksum:
+**Import** a mnemonic and fix the checksum:
 ```
 from tulliolo.bip39.mnemonic import Mnemonic
 
@@ -145,7 +145,7 @@ print(mnemonic.info)
 {'entropy': 'f3eb990c391405f8c266668125b3b1b8', 'checksum': '0', 'value': {1: 'view', 2: 'fresh', 3: 'drink', 4: 'impulse', 5: 'doctor', 6: 'wise', 7: 'another', 8: 'smoke', 9: 'license', 10: 'collect', 11: 'unaware', 12: 'hybrid'}}
 ```
 
-Generate the seed, that can be later used to generate bip32 wallets:
+Generate the **seed**, that can be later used to generate bip32 wallets:
 ```
 from tulliolo.bip39.mnemonic import Mnemonic
 
@@ -155,7 +155,7 @@ print(seed.hex())
 d24027e4b7dae545b95dca96a7b8e539e0a0d7ae2ef6cd2247e346907f7b842bb93d2268ee3bd28eede481b0ddab0b44f04ed49b4a4904ee7882677dd2677ac2
 ```
 
-Transform and restore a mnemonic with a "mirror" transformation:
+**Transform** and restore a mnemonic with a _mirror_ transformation:
 ```
 from tulliolo.bip39.mnemonic import Mnemonic
 from tulliolo.bip39.utils.transformation import Transformation
@@ -173,6 +173,44 @@ print(mnemonic_t.value)
 ('view', 'fresh', 'drink', 'impulse', 'doctor', 'wise', 'another', 'smoke', 'license', 'collect', 'unaware', 'hybrid')
 ```
 
+**Encrypt** a mnemonic and **hide** it in an image with steganography:
+```
+import pathlib
+from tulliolo.bip39.utils import encryption, steganography
+
+words = "view fresh drink impulse doctor wise another smoke license collect unaware hybrid"
+
+# encrypt words
+words = encryption.encrypt(words, "my_password")
+
+# create paths
+input_file = pathlib.Path("tests/data/test_image.jpg")
+output_path = pathlib.Path("tests/data/output")
+
+# hide message
+output_file = steganography.encode(words, input_file, output_path)
+print(output_file)
+
+tests/data/output/test_image_horizontal_20230513-103831.png
+```
+
+**Reveal** a mnemonic in an image with steganography and **encrypt** it:
+```
+import pathlib
+from tulliolo.bip39.utils import encryption, steganography
+
+# create path
+input_file = pathlib.Path("tests/data/output/test_image_horizontal_20230513-103831.png")
+
+# reveal message
+message = steganography.decode(input_file)
+
+# decrypt message
+message = encryption.decrypt(message, "my_password").decode("utf-8")
+print(message)
+
+view fresh drink impulse doctor wise another smoke license collect unaware hybrid
+```
 
 ## Disclaimer
 
