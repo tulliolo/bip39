@@ -12,7 +12,7 @@ For further details, please refer to the [documentation folder](https://github.c
 **For security reasons, it is highly recommended to run the CLI on an offline system, without any Internet or LAN connection.**
 
 ## Requirements
-python 3.7+
+python 3.9+
 
 ## Installation
 This project is distributed on [PyPI](https://pypi.org/):
