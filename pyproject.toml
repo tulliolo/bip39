@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools", "setuptools_scm[toml]"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tulliolo.bip39"
+authors = [
+    {name = "Tullio Loffredo (@tulliolo)", email = "tulliolo@yahoo.com"},
+]
+description = "A bip39 implementation, with a collection of tools"
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.9"
+keywords = [
+    "bitcoin", "bip39", "entropy", "mnemonic", "seed",
+    "cryptography", "steganography"
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Operating System :: OS Independent",
+    "Topic :: Security",
+    "Topic :: Utilities"
+]
+dynamic = ["dependencies", "version"]
+
+[project.urls]
+"Homepage" = "https://github.com/tulliolo/bip39"
+"Bug Tracker" = "https://github.com/tulliolo/bip39/issues"
+"Documentation" = "https://github.com/tulliolo/bip39/wiki"
+
+[project.scripts]
+bip39-cli = "tulliolo.bip39.cli.__main__:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+mypkg = ["data/*"]
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+version = {file = ["VERSION"]}
