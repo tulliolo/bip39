@@ -1,5 +1,5 @@
 # Bip39
-A Bip39 library, with a CLI and collection of tools.
+A Bip39 library, with a CLI and a collection of tools.
 
 This project provides a full implementation of the [Bip39 specs](https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki), along with a CLI that offers some mnemonic key management tools such as:
 - **generate** and **validate** mnemonics;
